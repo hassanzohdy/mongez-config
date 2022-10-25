@@ -1,6 +1,6 @@
 {
     "name": "@mongez/config",
-    "version": "1.0.22",
+    "version": "1.0.23",
     "description": "A simple configuration package for settling data in a centered place for better code quality",
     "main": "src/index.ts",
     "author": "hassanzohdy",
