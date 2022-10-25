@@ -1,5 +1,4 @@
-import { fromJS } from "immutable";
-import { Obj } from "@mongez/reinforcements";
+import { get, merge } from "@mongez/reinforcements";
 import type { ConfigList } from "./types";
 
 const config = {
@@ -15,9 +14,7 @@ const config = {
   set(key: string | ConfigList, value: any = null) {
     // case one one argument only is passed and is object
     if (arguments.length === 1) {
-      this.data = (fromJS(this.data) as any)
-        .mergeDeep(key)
-        .toJS() as ConfigList;
+      this.data = merge(this.data);
     } else {
       Obj.set(this.data, key as string, value);
     }
@@ -32,7 +29,7 @@ const config = {
    * @returns any
    */
   get(key: string, defaultValue: any = null) {
-    return Obj.get(this.data, key, defaultValue);
+    return get(this.data, key, defaultValue);
   },
   /**
    * Get all configurations

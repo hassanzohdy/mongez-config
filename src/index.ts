@@ -1,2 +1,4 @@
-export { default } from "./config";
-export type { ConfigList } from "./types";
+import config from "./config";
+
+export * from "./types";
+export default config;

@@ -1,6 +1,6 @@
 {
     "name": "@mongez/config",
-    "version": "1.0.19",
+    "version": "1.0.21",
     "description": "A simple configuration package for settling data in a centered place for better code quality",
     "main": "src/index.ts",
     "author": "hassanzohdy",
@@ -10,7 +10,6 @@
     },
     "license": "MIT",
     "dependencies": {
-        "@mongez/reinforcements": "^1.0.x",
-        "immutable": "^4.0.0"
+        "@mongez/reinforcements": "^2.x.x"
     }
 }
