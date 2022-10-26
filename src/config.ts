@@ -8,9 +8,9 @@ const config = {
   set(key: string | Record<string, any>, value: any = null) {
     // case one one argument only is passed and is object
     if (arguments.length === 1) {
-      this.data = merge(this.data);
+      this.data = merge(this.data, key);
     } else {
-      set(this.data, key as string, value);
+      set(this.data, key, value);
     }
   },
   /**
