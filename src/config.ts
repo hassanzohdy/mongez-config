@@ -1,4 +1,5 @@
 import { get, merge, set } from "@mongez/reinforcements";
+import { ConfigurationsList } from "./types";
 
 const config = {
   data: {},
@@ -18,7 +19,7 @@ const config = {
    * P.S data will be grabbed using dot notation
    * i.e name.first
    */
-  get(key: string, defaultValue: any = null) {
+  get(key: keyof ConfigurationsList, defaultValue: any = null) {
     return get(this.data, key, defaultValue);
   },
   /**
