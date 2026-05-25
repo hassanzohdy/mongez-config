@@ -1,0 +1,39 @@
+# @mongez/config
+
+> A tiny, framework-agnostic configuration tree. Drop a tree of values in once at boot; read them anywhere by dotted path with a default fallback. Three methods: `config.set`, `config.get`, `config.list`. No dependencies beyond `@mongez/reinforcements`.
+
+This is the configuration primitive of the Mongez family. For reactive state (subscriptions, derived values, SSR isolation) see [`@mongez/atom`](https://github.com/hassanzohdy/atom).
+
+The default export is a singleton — all importers share one tree.
+
+## Docs
+
+- [Overview](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/overview.md): Pitch, install, mental model.
+- [README](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/README.md): Marketing-style index.
+- [Changelog](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/CHANGELOG.md): Release notes.
+
+## Reference (by feature)
+
+- [Reading](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/reading.md): `config.get(path, default?)`. Dot-notation, numeric array indices, default-fallback behavior on missing keys vs. falsy values.
+- [Writing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/writing.md): `config.set(treeOrPath, value?)`. Object-form deep merge vs. path-form per-key write. Intermediate object/array creation.
+- [Listing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/listing.md): `config.list()`. Live-reference semantics and snapshot pitfalls.
+- [Typing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/typing.md): `ConfigurationsList`, project-specific shapes, typed read helpers.
+
+## Recipes
+
+- [Recipes](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/recipes.md): Multi-source boot, env-var overrides, feature flags, reactive config on top of `@mongez/atom`.
+
+## Quick rules
+
+1. `config.set(obj)` is a **deep merge** — it does not replace the tree. Use it for layered configuration (base + env + overrides).
+2. `config.set(path, value)` writes to a single dotted path. Intermediate containers are created on demand (objects, or arrays when the next segment is a numeric index).
+3. `config.get(path, default)` returns `default` only when the path is missing or terminates in `undefined`. Other falsy values (`0`, `""`, `false`, `null`) pass through.
+4. The default for the second argument of `get` is `null`, not `undefined`.
+5. `config.list()` returns the **live** tree by reference — mutating the result mutates the config. Clone for snapshots.
+6. Keys that contain literal dots are unreachable via `get` — paths are split on `.`. Avoid `"api.example.com"` as a single key.
+7. The config is a process-wide singleton. For per-request isolation (SSR), use `@mongez/atom`'s `AtomStore`, not this package.
+
+## Optional
+
+- [Full single-file reference (llms-full.txt)](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/llms-full.txt): All reference content concatenated.
+- [GitHub repository](https://github.com/hassanzohdy/mongez-config): Source code, issues, releases.

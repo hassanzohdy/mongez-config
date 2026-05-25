@@ -1,0 +1,195 @@
+# @mongez/config — full reference
+
+> A tiny, framework-agnostic configuration tree. This is the concatenated reference; load `llms.txt` for the structured index instead.
+
+## Install
+
+```sh
+yarn add @mongez/config
+# peer: @mongez/reinforcements
+```
+
+## Public exports
+
+```ts
+import config from "@mongez/config";
+import type { ConfigurationsList } from "@mongez/config";
+```
+
+That's the entire surface. The default export is a singleton object with three methods.
+
+## API
+
+### `config.set(treeOrPath, value?)`
+
+Two call shapes:
+
+```ts
+// Object form: deep-merge a partial tree into existing data.
+config.set({
+  api: { url: "https://api.example.com", timeout: 5000 },
+  features: { darkMode: true },
+});
+
+// Path form: write one value at a dotted path.
+config.set("api.url", "https://api.example.com");
+config.set("features.darkMode", true);
+```
+
+**Deep merge.** Object form recurses through plain objects. Arrays at the same path are **replaced**, not concatenated (this is `@mongez/reinforcements`' default `merge` behavior).
+
+**Intermediate creation.** Path form creates intermediate containers on demand:
+
+- Object containers, by default.
+- Array containers when the **next** segment is a numeric index (`"hosts.0.url"` → `hosts` becomes `[]`).
+
+**No-op on empty path.** `config.set("", "x")` is a no-op (and so are the same edge cases of the underlying `set`).
+
+### `config.get(path, defaultValue?)`
+
+```ts
+config.get("api.url");                       // -> string | null
+config.get("api.timeout", 30000);            // -> number
+config.get("missing.key", "fallback");       // -> "fallback"
+
+// Numeric segments index arrays.
+config.set({ servers: ["a", "b"] });
+config.get("servers.0");                     // "a"
+config.get("servers.5", "default");          // "default"
+```
+
+`defaultValue` is returned ONLY when:
+- The path doesn't exist, OR
+- The path terminates in `undefined`.
+
+Other falsy values (`0`, `""`, `false`, `null`) pass through:
+
+```ts
+config.set("flag", false);
+config.get("flag", true);                    // false  (NOT true)
+
+config.set("count", 0);
+config.get("count", 1);                      // 0
+```
+
+**Default for `defaultValue` is `null`** (not `undefined`). Useful for `??` patterns at call sites.
+
+### `config.list()`
+
+Returns the underlying data object **by reference**.
+
+```ts
+config.list();                               // { api: {...}, features: {...} }
+```
+
+Mutating the result mutates the live config. Clone (`structuredClone(config.list())`) for snapshots.
+
+## Singleton behavior
+
+The default export is a single shared object across importers:
+
+```ts
+// file-a.ts
+import config from "@mongez/config";
+config.set({ a: 1 });
+
+// file-b.ts
+import config from "@mongez/config";
+config.get("a");                             // 1
+```
+
+For per-request isolation (SSR), use [`@mongez/atom`](https://github.com/hassanzohdy/atom)'s `AtomStore` — this package is not isolation-aware.
+
+## Typing
+
+```ts
+// Built-in type — permissive on purpose.
+export type ConfigurationsList = Record<string, any>;
+```
+
+Declare your own shape for type-safe reads:
+
+```ts
+// src/config-types.ts
+export type AppConfig = {
+  api: {
+    url: string;
+    timeout: number;
+    headers?: Record<string, string>;
+  };
+  features: {
+    darkMode: boolean;
+    beta: boolean;
+  };
+};
+
+// boot
+import config from "@mongez/config";
+import type { AppConfig } from "./config-types";
+const appConfig: AppConfig = { /* ... */ };
+config.set(appConfig);
+
+// read
+const url = config.get<string>("api.url");
+const timeout = config.get<number>("api.timeout", 30000);
+```
+
+For tighter inference, wrap `config.get` in a typed helper against `AppConfig`.
+
+## Patterns
+
+### Multi-source boot
+
+```ts
+import config from "@mongez/config";
+import baseConfig from "./config/base";
+import envConfig from "./config/env";
+
+// Deep-merge: later calls layer on top of earlier ones.
+config.set(baseConfig);
+config.set(envConfig);
+
+// Single-key overrides win last.
+if (process.env.API_URL) {
+  config.set("api.url", process.env.API_URL);
+}
+```
+
+### Feature flags with safe defaults
+
+```ts
+function isEnabled(feature: string): boolean {
+  return Boolean(config.get(`features.${feature}`, false));
+}
+
+if (isEnabled("darkMode")) {
+  // ...
+}
+```
+
+### Reactive config via @mongez/atom
+
+```ts
+import { createAtom } from "@mongez/atom";
+import config from "@mongez/config";
+
+const themeAtom = createAtom({
+  key: "ui.theme",
+  default: config.get("features.defaultTheme", "light"),
+});
+```
+
+## Gotchas
+
+- **Dots in keys.** `config.set({ "api.example.com": 1 })` stores the literal key, but `config.get("api.example.com")` reads `obj.api.example.com` and returns the default. Avoid dots inside keys.
+- **`list()` is a live reference.** Mutations leak. Clone for snapshots.
+- **`config.set("path", undefined)` writes `null`, not `undefined`.** The internal signature is `set(key, value = null)`, and JS default parameters substitute for `undefined`. To remove a key, use `unset(config.list(), [path])` from `@mongez/reinforcements`.
+- **Array merge replaces, not concatenates.** Object-form `set` of `{ list: [3] }` over `{ list: [1, 2] }` yields `{ list: [3] }`. Use the path form (`config.set("list.2", 3)`) to extend, or read-modify-write (`config.set("list", [...config.get("list"), 3])`).
+- **No events / no subscriptions.** This package is intentionally dumb. Layer reactivity on top via `@mongez/atom`.
+
+## What this package does NOT do
+
+- Reactivity / subscriptions → `@mongez/atom`
+- Per-request isolation for SSR → `@mongez/atom` (`AtomStore`)
+- Event bus / change notifications → `@mongez/events`
+- Object/path utilities directly → `@mongez/reinforcements`
