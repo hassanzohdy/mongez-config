@@ -106,7 +106,7 @@ config.set("", "x");                         // no-op
 
 ## Gotchas
 
-- **One-argument calls must be a plain object.** Shape detection is "is the first arg a plain object?" — non-object single-arg calls (`config.set("api.url")`, `config.set(42)`, `config.set(null)`, `config.set(["a","b"])`) throw `TypeError`. Use `config.set(path, value)` for path writes, or `config.set({ ... })` for deep merge.
+- **One-argument calls must be a plain object.** Shape is detected by `arguments.length === 1`, then the single arg is validated as a plain object — non-object single-arg calls (`config.set("api.url")`, `config.set(42)`, `config.set(null)`, `config.set(["a","b"])`) throw `TypeError`. Use `config.set(path, value)` for path writes, or `config.set({ ... })` for deep merge.
 - **Object-form merge keeps existing keys.** This is usually what you want — but if your goal is "replace this whole subtree", use the path form: `config.set("api", newApi)`.
 - **`config.set("path", undefined)` writes `null`, not `undefined` — and definitely not "delete".** The internal signature is `set(key, value = null)`, and JS default parameters substitute for `undefined`. See `reading.md` for how this interacts with `get`.
 - **Calling `set({})` is a deep-merge of nothing.** It's a no-op; doesn't clear the tree. To reset, mutate the live object from `config.list()` (or, in practice, just don't reset config at runtime).
