@@ -1,7 +1,9 @@
 ---
 name: mongez-config-reading
-description: Complete reference for config.get — dot-notation paths, array indexing, default-substitution rules, and gotchas around falsy values and dots in keys.
-when_to_use: User calls config.get, user asks how to read a value from the config tree, user asks about default values or fallback behaviour, user is confused why a falsy value (false/0/"") is not returning their default, user asks about dot-notation or numeric segment indexing.
+description: |
+  Complete reference for `config.get` — dot-notation paths, numeric array indexing, default-substitution rules, and gotchas around falsy values and dots in keys.
+  TRIGGER when: code calls `config.get` from `@mongez/config`; user asks "how do I read a value from config", "why is my default not being used", or "how do I read an array index from config"; import pattern `import config from "@mongez/config"` followed by `config.get(...)`.
+  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; writing values — use `mongez-config-writing`; whole-tree access — use `mongez-config-listing`; TypeScript typing of returns — use `mongez-config-typing`.
 ---
 
 # Reading — `config.get`

@@ -22,6 +22,9 @@ That's the entire surface. The default export is a singleton object with three m
 
 ### `config.set(treeOrPath, value?)`
 
+> **Auto-trigger:** code calls `config.set` from `@mongez/config`; user asks "how do I deep-merge config", "why was my array replaced instead of appended", or "how do I write a nested config value"; import pattern `import config from "@mongez/config"` followed by `config.set(...)`.
+> **Skip when:** `@mongez/dotenv` handles `.env` parsing, not this package; reading values — use `mongez-config-reading`; multi-source boot patterns — use `mongez-config-recipes`; whole-tree replacement / live-reference semantics — use `mongez-config-listing`.
+
 Two call shapes:
 
 ```ts
@@ -46,6 +49,9 @@ config.set("features.darkMode", true);
 **No-op on empty path.** `config.set("", "x")` is a no-op (and so are the same edge cases of the underlying `set`).
 
 ### `config.get(path, defaultValue?)`
+
+> **Auto-trigger:** code calls `config.get` from `@mongez/config`; user asks "how do I read a value from config", "why is my default not being used", or "how do I read an array index from config"; import pattern `import config from "@mongez/config"` followed by `config.get(...)`.
+> **Skip when:** `@mongez/dotenv` handles `.env` parsing, not this package; writing values — use `mongez-config-writing`; whole-tree access — use `mongez-config-listing`; TypeScript typing of returns — use `mongez-config-typing`.
 
 ```ts
 config.get("api.url");                       // -> string | null
@@ -76,6 +82,9 @@ config.get("count", 1);                      // 0
 
 ### `config.list()`
 
+> **Auto-trigger:** code calls `config.list` from `@mongez/config`; user asks "how do I get the full config tree", "how do I snapshot/clone the config", or "how do I dump the config for debugging"; import pattern `import config from "@mongez/config"` followed by `config.list()`.
+> **Skip when:** `@mongez/dotenv` handles `.env` parsing, not this package; reading single values — use `mongez-config-reading`; writing values — use `mongez-config-writing`; reactive subscriptions on the tree — use `mongez-atom-*` skills.
+
 Returns the underlying data object **by reference**.
 
 ```ts
@@ -101,6 +110,9 @@ config.get("a");                             // 1
 For per-request isolation (SSR), use [`@mongez/atom`](https://github.com/hassanzohdy/atom)'s `AtomStore` — this package is not isolation-aware.
 
 ## Typing
+
+> **Auto-trigger:** code imports `ConfigurationsList` from `@mongez/config`; code uses `config.get<T>(...)` with a type parameter; user asks "how do I type @mongez/config", "how do I avoid `any` from `config.get`", or "how do I make config type-safe"; user references `AppConfig` or a typed config wrapper.
+> **Skip when:** `@mongez/dotenv` handles `.env` parsing, not this package; runtime read/write behaviour — use `mongez-config-reading`/`mongez-config-writing`; pattern recipes — use `mongez-config-recipes`.
 
 ```ts
 // Built-in type — permissive on purpose.
@@ -137,6 +149,9 @@ const timeout = config.get<number>("api.timeout", 30000);
 For tighter inference, wrap `config.get` in a typed helper against `AppConfig`.
 
 ## Patterns
+
+> **Auto-trigger:** code combines `config.set` calls in a boot sequence (base + env + overrides) from `@mongez/config`; user asks "how do I set up multi-environment config", "how do I do feature flags with @mongez/config", or "how do I make config reactive with @mongez/atom"; per-feature wrapper modules around `config.get`.
+> **Skip when:** `@mongez/dotenv` handles `.env` parsing, not this package; single-method reference — use `mongez-config-reading`/`mongez-config-writing`/`mongez-config-listing`; pure `@mongez/atom` reactivity without config seed — use `mongez-atom-*` skills.
 
 ### Multi-source boot
 

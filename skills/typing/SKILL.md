@@ -1,7 +1,9 @@
 ---
 name: mongez-config-typing
-description: TypeScript patterns for @mongez/config — declaring an AppConfig shape, typing boot-time set calls, typing get at the call site, and building a thin typed wrapper for stronger inference.
-when_to_use: User asks how to add TypeScript types to @mongez/config, user wants type-safe config reads, user asks about ConfigurationsList, user wants to avoid "any" return from config.get, user is building a typed wrapper around config.get.
+description: |
+  TypeScript patterns for `@mongez/config` — using `ConfigurationsList`, declaring a project `AppConfig` shape, typing boot-time `config.set` calls, typing `config.get<T>` at the call site, and building a thin `getConfig` wrapper for stronger inference.
+  TRIGGER when: code imports `ConfigurationsList` from `@mongez/config`; code uses `config.get<T>(...)` with a type parameter; user asks "how do I type @mongez/config", "how do I avoid `any` from `config.get`", or "how do I make config type-safe"; user references `AppConfig` or a typed config wrapper.
+  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; runtime read/write behaviour — use `mongez-config-reading`/`mongez-config-writing`; pattern recipes — use `mongez-config-recipes`.
 ---
 
 # Typing

@@ -1,7 +1,9 @@
 ---
 name: mongez-config-recipes
-description: Idiomatic @mongez/config composition patterns — multi-source layered boot, feature flags, env-driven config, reactive config via @mongez/atom, per-feature namespaces, and boot-time debug snapshots.
-when_to_use: User asks for real-world examples or patterns using @mongez/config, user is setting up multi-environment config (base + env overrides), user wants feature flags backed by config, user asks how to combine @mongez/config with @mongez/atom for reactivity, user wants per-feature config accessor modules.
+description: |
+  Idiomatic `@mongez/config` composition patterns — multi-source layered boot, feature flags via `isEnabled`, env-driven config, reactive config layered on `createAtom` from `@mongez/atom`, per-feature `apiConfig`-style namespaces, and boot-time debug snapshots via `structuredClone`.
+  TRIGGER when: code combines `config.set` calls in a boot sequence (base + env + overrides) from `@mongez/config`; user asks "how do I set up multi-environment config", "how do I do feature flags with @mongez/config", or "how do I make config reactive with @mongez/atom"; per-feature wrapper modules around `config.get`.
+  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; single-method reference — use `mongez-config-reading`/`mongez-config-writing`/`mongez-config-listing`; pure `@mongez/atom` reactivity without config seed — use `mongez-atom-*` skills.
 ---
 
 # Recipes

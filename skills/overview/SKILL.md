@@ -1,7 +1,9 @@
 ---
 name: mongez-config-overview
-description: High-level orientation to the @mongez/config package — what it is, its mental model, the three core methods, and its intentional scope boundaries.
-when_to_use: User is new to @mongez/config and needs a conceptual introduction, user asks "what is @mongez/config", user asks about the package's mental model or scope, user needs to understand the install and import pattern before writing any code.
+description: |
+  High-level orientation to the @mongez/config package — what it is, its mental model, the three core methods (`config.set`, `config.get`, `config.list`), and its intentional scope boundaries.
+  TRIGGER when: code imports default `config` or type `ConfigurationsList` from `@mongez/config`; user asks "what is @mongez/config", "how do I get started with @mongez/config", or "how does the config singleton work"; import pattern `import config from "@mongez/config"`.
+  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; reactive config / subscriptions belong to `mongez-atom-*` skills; per-feature reading/writing/typing details — defer to `mongez-config-reading`, `mongez-config-writing`, `mongez-config-listing`, `mongez-config-typing`, `mongez-config-recipes`.
 ---
 
 # Overview

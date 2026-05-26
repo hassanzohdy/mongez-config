@@ -9,19 +9,25 @@ The default export is a singleton — all importers share one tree.
 ## Docs
 
 - [Overview](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/overview.md): Pitch, install, mental model.
+  - *Auto-trigger:* import default `config` or `ConfigurationsList` from `@mongez/config`, or when the user needs orientation to the singleton and its three methods.
 - [README](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/README.md): Marketing-style index.
 - [Changelog](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/CHANGELOG.md): Release notes.
 
 ## Reference (by feature)
 
 - [Reading](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/reading.md): `config.get(path, default?)`. Dot-notation, numeric array indices, default-fallback behavior on missing keys vs. falsy values.
+  - *Auto-trigger:* code calls `config.get` or the user asks about reading values, dot-notation paths, or default-vs-falsy fallback behaviour.
 - [Writing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/writing.md): `config.set(treeOrPath, value?)`. Object-form deep merge vs. path-form per-key write. Intermediate object/array creation.
+  - *Auto-trigger:* code calls `config.set` or the user asks about deep-merging, path-form writes, or array-replacement behaviour.
 - [Listing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/listing.md): `config.list()`. Live-reference semantics and snapshot pitfalls.
+  - *Auto-trigger:* code calls `config.list` or the user asks about snapshotting, cloning, or debug-dumping the whole config tree.
 - [Typing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/typing.md): `ConfigurationsList`, project-specific shapes, typed read helpers.
+  - *Auto-trigger:* code imports `ConfigurationsList`, calls `config.get<T>(...)`, or the user asks about type-safe config reads or `AppConfig` shapes.
 
 ## Recipes
 
 - [Recipes](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/recipes.md): Multi-source boot, env-var overrides, feature flags, reactive config on top of `@mongez/atom`.
+  - *Auto-trigger:* multiple chained `config.set` boot calls, or the user asks about feature flags, env-driven config, or reactivity via `@mongez/atom`.
 
 ## Quick rules
 
