@@ -15,8 +15,33 @@ The package is intentionally minimal. If you need subscriptions or derived value
 ## Install
 
 ```sh
+# npm
+npm install @mongez/config
+
+# yarn
 yarn add @mongez/config
-# peer: @mongez/reinforcements
+
+# pnpm
+pnpm add @mongez/config
+```
+
+`@mongez/reinforcements` is bundled as a regular dep — no peer install needed.
+
+## Quick example
+
+Seed the tree once at boot, read by dotted path with a fallback from anywhere:
+
+```ts
+import config from "@mongez/config";
+
+config.set({
+  api: { url: "https://api.example.com", timeout: 5000 },
+  features: { darkMode: true, beta: false },
+});
+
+config.get("api.url");                       // "https://api.example.com"
+config.get("api.timeout", 30000);            // 5000  (fallback ignored)
+config.get("missing.path", "fallback");      // "fallback"
 ```
 
 ## Import pattern
