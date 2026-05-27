@@ -110,9 +110,9 @@ import config from "@mongez/config";
 
 export function apiConfig() {
   return {
-    url: config.get<string>("api.url"),
-    timeout: config.get<number>("api.timeout", 5000),
-    headers: config.get<Record<string, string>>("api.headers", {}),
+    url: config.get("api.url") as string,
+    timeout: config.get("api.timeout", 5000) as number,
+    headers: config.get("api.headers", {}) as Record<string, string>,
   };
 }
 

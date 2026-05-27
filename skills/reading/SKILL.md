@@ -17,10 +17,12 @@ Returns the value at `path`. Substitutes `defaultValue` for missing paths or pat
 ## Signatures
 
 ```ts
-config.get("api.url");                       // -> string | null (default default)
-config.get("api.url", "https://default");    // -> string
-config.get<number>("api.timeout", 30000);    // -> number (caller-typed)
+config.get("api.url");                       // -> any (null when missing — the default default)
+config.get("api.url", "https://default");    // -> any
+const timeout: number = config.get("api.timeout", 30000);
 ```
+
+`config.get` is not a TypeScript generic — its return type is `any`. Narrow at the call site by annotating the receiving variable, asserting (`config.get("api.url") as string`), or wrapping (see `mongez-config-typing`).
 
 ## Dot-notation
 
