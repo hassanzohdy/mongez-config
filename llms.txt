@@ -1,6 +1,6 @@
 # @mongez/config
 
-> A tiny, framework-agnostic configuration tree. Drop a tree of values in once at boot; read them anywhere by dotted path with a default fallback. Three methods: `config.set`, `config.get`, `config.list`. No dependencies beyond `@mongez/reinforcements`.
+> A tiny, framework-agnostic configuration tree. Drop a tree of values in once at boot; read them anywhere by dotted path with a default fallback. Four methods: `config.set`, `config.get`, `config.unset`, `config.list`. No dependencies beyond `@mongez/reinforcements`.
 
 This is the configuration primitive of the Mongez family. For reactive state (subscriptions, derived values, SSR isolation) see [`@mongez/atom`](https://github.com/hassanzohdy/atom).
 
@@ -9,7 +9,7 @@ The default export is a singleton — all importers share one tree.
 ## Docs
 
 - [Overview](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/overview.md): Pitch, install, mental model.
-  - *Auto-trigger:* import default `config` or `ConfigurationsList` from `@mongez/config`, or when the user needs orientation to the singleton and its three methods.
+  - *Auto-trigger:* import default `config` or `ConfigurationsList` from `@mongez/config`, or when the user needs orientation to the singleton and its four methods.
 - [README](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/README.md): Marketing-style index.
 - [Changelog](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/CHANGELOG.md): Release notes.
 
@@ -17,8 +17,8 @@ The default export is a singleton — all importers share one tree.
 
 - [Reading](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/reading.md): `config.get(path, default?)`. Dot-notation, numeric array indices, default-fallback behavior on missing keys vs. falsy values.
   - *Auto-trigger:* code calls `config.get` or the user asks about reading values, dot-notation paths, or default-vs-falsy fallback behaviour.
-- [Writing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/writing.md): `config.set(treeOrPath, value?)`. Object-form deep merge vs. path-form per-key write. Intermediate object/array creation.
-  - *Auto-trigger:* code calls `config.set` or the user asks about deep-merging, path-form writes, or array-replacement behaviour.
+- [Writing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/writing.md): `config.set(treeOrPath, value?)`, `config.unset(key)` / `config.remove(key)`. Object-form deep merge vs. path-form per-key write. Intermediate object/array creation. `undefined` clears a key; `null` is stored as a real value.
+  - *Auto-trigger:* code calls `config.set` / `config.unset` / `config.remove`, or the user asks about deep-merging, path-form writes, array-replacement behaviour, how to delete a key, or why a `get` default stopped applying.
 - [Listing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/listing.md): `config.list()`. Live-reference semantics and snapshot pitfalls.
   - *Auto-trigger:* code calls `config.list` or the user asks about snapshotting, cloning, or debug-dumping the whole config tree.
 - [Typing](https://raw.githubusercontent.com/hassanzohdy/mongez-config/main/skills/typing.md): `ConfigurationsList`, project-specific shapes, typed read helpers.
@@ -35,6 +35,8 @@ The default export is a singleton — all importers share one tree.
 2. `config.set(path, value)` writes to a single dotted path. Intermediate containers are created on demand (objects, or arrays when the next segment is a numeric index).
 3. `config.get(path, default)` returns `default` only when the path is missing or terminates in `undefined`. Other falsy values (`0`, `""`, `false`, `null`) pass through.
 4. The default for the second argument of `get` is `null`, not `undefined`.
+5. `config.set(key, undefined)` **unsets** the key, so `get(key, fallback)` returns the fallback again. `config.set(key, null)` stores a real `null` that beats the fallback — "configured to nothing" is not the same as "not configured". (Before 1.2.0 `undefined` was coerced to `null`, which silently disabled the fallback.)
+6. `config.unset(key)` / `config.remove(key)` remove one key or an array of keys. Dot notation removes a leaf without touching siblings. Never reach into `config.list()` and `delete` — the live-object return is an implementation detail.
 5. `config.list()` returns the **live** tree by reference — mutating the result mutates the config. Clone for snapshots.
 6. Keys that contain literal dots are unreachable via `get` — paths are split on `.`. Avoid `"api.example.com"` as a single key.
 7. The config is a process-wide singleton. For per-request isolation (SSR), use `@mongez/atom`'s `AtomStore`, not this package.

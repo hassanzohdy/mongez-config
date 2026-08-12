@@ -38,15 +38,16 @@ config.get("missing.path", "fallback");      // "fallback"
 
 | Feature | Description |
 |---|---|
-| **Three methods, one tree** | `config.set`, `config.get`, `config.list`. That's the whole API. |
+| **Four methods, one tree** | `config.set`, `config.get`, `config.unset`, `config.list`. That's the whole API. |
 | **Dot-notation reads** | `config.get("api.headers.x-app-id")` walks any depth, including numeric array indices. |
 | **Deep-merge writes** | Object-form `set` recursively merges partial trees — sibling keys are preserved across calls. |
 | **Path-form writes** | `config.set("api.url", "...")` writes one value; intermediate objects (and arrays, for numeric segments) are created on demand. |
 | **Default fallback** | `get` returns the default only on missing or `undefined` — `0`, `""`, `false`, and `null` pass through. |
+| **Removable keys** | `unset(key)` — or `set(key, undefined)` — clears a key so `get(key, fallback)` returns the fallback again. |
 | **Singleton tree** | One shared object across every importer. Boot once, read anywhere. |
 | **TypeScript-friendly** | `config.get<T>(path)` lets you narrow at the call site; bring your own `AppConfig` shape. |
 | **Atom-pairable** | Seed a [`@mongez/atom`](https://github.com/hassanzohdy/atom) atom from config when you need reactivity on top. |
-| **One small dependency** | `@mongez/reinforcements` provides `get` / `set` / `merge`. No runtime peers beyond that. |
+| **One small dependency** | `@mongez/reinforcements` provides `get` / `set` / `merge` / `unset`. No runtime peers beyond that. |
 
 ---
 
@@ -97,7 +98,7 @@ config.set("api.headers.x-app-id", "web");
 config.list();                               // { api: {...}, features: {...} }
 ```
 
-That's the entire happy path. Everything below is depth on the same three methods.
+That's the entire happy path. Everything below is depth on the same four methods.
 
 ---
 
@@ -242,7 +243,65 @@ config.list();
 
 > **Single-argument calls must be a plain object.** `config.set("api.url")` (no value) throws `TypeError` instead of silently corrupting the tree. Use `config.set(path, value)` for a path write, or `config.set({ ... })` for a deep merge.
 
-> **`config.set("path", undefined)` writes `null`, not `undefined` — and definitely not "delete".** The internal signature is `set(key, value = null)`, and JS default parameters substitute for `undefined`. To remove a key, mutate `config.list()` with `unset` from `@mongez/reinforcements`.
+### `undefined` clears, `null` is a value
+
+The two are deliberately different, and the difference is the whole point:
+
+| Call | Effect | `get(key, "D")` afterwards |
+|---|---|---|
+| `config.set(key, undefined)` | **unsets** the key | `"D"` |
+| `config.set(key, null)` | stores a real `null` | `null` |
+
+`undefined` means *"no value"*, and `get`'s default exists precisely to cover a key with no value. `null` means *"configured to nothing"*, which is a different statement — only the caller knows which one they meant, so the package preserves both.
+
+```ts
+config.set("http.bodyLimit", 999);
+config.get("http.bodyLimit", 4096);   // 999
+
+config.set("http.bodyLimit", undefined);
+config.get("http.bodyLimit", 4096);   // 4096 — the key is gone
+config.list();                        // {} — no null left behind
+
+config.set("feature.flag", null);
+config.get("feature.flag", "on");     // null — deliberate, not missing
+```
+
+This matters because `set(key, undefined)` is what ordinary code produces without anyone deciding to write it — an optional env var, a spread of a partial options object, a test's cleanup step:
+
+```ts
+config.set("http.bodyLimit", process.env.LIMIT && Number(process.env.LIMIT));
+config.set("http", { ...defaults, ...userOptions });
+afterEach(() => config.set("http.bodyLimit", undefined));
+```
+
+> **Changed in 1.2.0.** Before then, `undefined` was coerced to `null` on write (the signature was `set(key, value = null)`, and JS default parameters substitute for `undefined`). The stored `null` was a *present* value, so every later `config.get(key, fallback)` returned it **instead of the fallback** — silently disabling the default-value contract, with the failure surfacing far from its cause.
+
+---
+
+## Removing — `config.unset`
+
+```ts
+config.unset(key: string | string[]): void
+config.remove(key: string | string[]): void   // alias
+```
+
+Removes one or more keys. Dot notation removes a leaf without touching its siblings; removing a branch removes everything beneath it. Unsetting a key that was never set is a no-op.
+
+```ts
+config.set("api.url", "https://example.com");
+config.set("api.timeout", 5000);
+
+config.unset("api.timeout");
+config.get("api.url");                  // "https://example.com" — sibling intact
+config.get("api.timeout", 3000);        // 3000
+
+config.unset("api");                    // removes the whole branch
+config.unset(["cache.ttl", "cache.driver"]);
+```
+
+`config.set(key, undefined)` and `config.unset(key)` do the same thing — use whichever reads better at the call site.
+
+> Added in 1.2.0. Previously there was **no way to remove a key**, and the workaround was to mutate the object returned by `config.list()` — which only worked because `list()` happens to return the live tree rather than a copy. That is an implementation detail, not a contract; don't build on it.
 
 ---
 

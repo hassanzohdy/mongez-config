@@ -16,7 +16,7 @@ import config from "@mongez/config";
 import type { ConfigurationsList } from "@mongez/config";
 ```
 
-That's the entire surface. The default export is a singleton object with three methods.
+That's the entire surface. The default export is a singleton object with four methods (`set`, `get`, `unset`/`remove`, `list`).
 
 ## API
 
@@ -47,6 +47,41 @@ config.set("features.darkMode", true);
 - Array containers when the **next** segment is a numeric index (`"hosts.0.url"` → `hosts` becomes `[]`).
 
 **No-op on empty path.** `config.set("", "x")` is a no-op (and so are the same edge cases of the underlying `set`).
+
+**`undefined` clears, `null` is a value.** The two are deliberately different:
+
+| Call | Effect | `get(key, "D")` afterwards |
+|---|---|---|
+| `config.set(key, undefined)` | unsets the key | `"D"` |
+| `config.set(key, null)` | stores a real `null` | `null` |
+
+`undefined` means "no value" and `get`'s default exists to cover exactly that; `null` means "configured to nothing", which only the caller can intend. Before 1.2.0 `undefined` was coerced to `null` on write (`set(key, value = null)` — a JS default parameter substitutes for `undefined`), so a cleared key became a *present* `null` and every later `get(key, fallback)` returned it instead of the fallback.
+
+### `config.unset(key)` / `config.remove(key)`
+
+> **Auto-trigger:** code calls `config.unset` or `config.remove`; user asks "how do I delete a config key", "how do I reset a config value between tests", or "why does my `get` default stop working after I clear a key".
+> **Skip when:** writing values — use `mongez-config-writing`; reading — use `mongez-config-reading`.
+
+```ts
+config.unset(key: string | string[]): void
+config.remove(key: string | string[]): void   // alias
+```
+
+Removes one or more keys. Dot notation removes a leaf without touching siblings; removing a branch removes everything beneath it; unsetting a key that was never set is a no-op.
+
+```ts
+config.set("api.url", "https://example.com");
+config.set("api.timeout", 5000);
+
+config.unset("api.timeout");
+config.get("api.url");             // "https://example.com" — sibling intact
+config.get("api.timeout", 3000);   // 3000
+
+config.unset("api");               // whole branch
+config.unset(["cache.ttl", "cache.driver"]);
+```
+
+`config.set(key, undefined)` and `config.unset(key)` are equivalent. Added in 1.2.0 — before that there was no way to remove a key, and the workaround was mutating the live object from `config.list()`, which is an implementation detail rather than a contract.
 
 ### `config.get(path, defaultValue?)`
 
@@ -79,6 +114,8 @@ config.get("count", 1);                      // 0
 ```
 
 **Default for `defaultValue` is `null`** (not `undefined`). Useful for `??` patterns at call sites.
+
+**A stored `null` is returned as-is** — the default applies to an *absent* key, not to a key deliberately set to `null`. Use `config.unset(key)` (or `set(key, undefined)`) when you want the default back.
 
 ### `config.list()`
 
@@ -198,7 +235,7 @@ const themeAtom = createAtom({
 
 - **Dots in keys.** `config.set({ "api.example.com": 1 })` stores the literal key, but `config.get("api.example.com")` reads `obj.api.example.com` and returns the default. Avoid dots inside keys.
 - **`list()` is a live reference.** Mutations leak. Clone for snapshots.
-- **`config.set("path", undefined)` writes `null`, not `undefined`.** The internal signature is `set(key, value = null)`, and JS default parameters substitute for `undefined`. To remove a key, use `unset(config.list(), [path])` from `@mongez/reinforcements`.
+- **`config.set("path", undefined)` removes the key** (since 1.2.0), so `get(path, fallback)` returns the fallback again. `config.set(path, null)` stores a real `null` that the fallback does NOT replace. Use `config.unset(path)` when removal is the intent.
 - **Array merge replaces, not concatenates.** Object-form `set` of `{ list: [3] }` over `{ list: [1, 2] }` yields `{ list: [3] }`. Use the path form (`config.set("list.2", 3)`) to extend, or read-modify-write (`config.set("list", [...config.get("list"), 3])`).
 - **No events / no subscriptions.** This package is intentionally dumb. Layer reactivity on top via `@mongez/atom`.
 

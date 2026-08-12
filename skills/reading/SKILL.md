@@ -2,8 +2,6 @@
 name: mongez-config-reading
 description: |
   Complete reference for `config.get` — dot-notation paths, numeric array indexing, default-substitution rules, and gotchas around falsy values and dots in keys.
-  TRIGGER when: code calls `config.get` from `@mongez/config`; user asks "how do I read a value from config", "why is my default not being used", or "how do I read an array index from config"; import pattern `import config from "@mongez/config"` followed by `config.get(...)`.
-  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; writing values — use `mongez-config-writing`; whole-tree access — use `mongez-config-listing`; TypeScript typing of returns — use `mongez-config-typing`.
 ---
 
 # Reading — `config.get`
@@ -12,7 +10,7 @@ description: |
 config.get(path: string, defaultValue?: any): any
 ```
 
-Returns the value at `path`. Substitutes `defaultValue` for missing paths or paths that terminate in `undefined`.
+Returns the value at `path`. Substitutes `defaultValue` for **absent** paths (or a path that terminates in `undefined`). A stored `null` is a present value and is returned as-is — see the gotchas.
 
 ## Signatures
 
@@ -87,5 +85,5 @@ This is helpful for `??` patterns: `const url = config.get("api.url") ?? "https:
 ## Gotchas
 
 - **Dots in keys.** If you stored a key with a literal dot (`{"api.example.com": 1}`), `get("api.example.com")` reads `obj.api.example.com` — three segments — and returns the default. Avoid dots inside keys.
-- **`config.set("path", undefined)` looks like delete but isn't — it writes `null`.** JS default parameters substitute for `undefined`, and the internal signature is `set(key, value = null)`. `get("path", "x")` returns `null` (which is *not* undefined, so the default does not kick in). To actually remove a key, use `unset` from `@mongez/reinforcements` against `config.list()`.
+- **A stored `null` is a value, and the default does NOT replace it.** `config.set(k, null)` then `config.get(k, "x")` returns `null`. That is deliberate: "configured to nothing" is a different statement from "not configured". If you want the default back, clear the key with `config.unset(k)` or `config.set(k, undefined)` — both remove it (since 1.2.0). Before 1.2.0, `set(k, undefined)` wrote `null` and silently killed the fallback on every later read.
 - **Missing intermediate segments.** `config.get("a.b.c", "x")` returns `"x"` if any of `a`, `b`, or `c` is missing — `get` short-circuits the moment it hits a missing key.

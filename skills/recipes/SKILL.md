@@ -2,8 +2,6 @@
 name: mongez-config-recipes
 description: |
   Idiomatic `@mongez/config` composition patterns — multi-source layered boot, feature flags via `isEnabled`, env-driven config, reactive config layered on `createAtom` from `@mongez/atom`, per-feature `apiConfig`-style namespaces, and boot-time debug snapshots via `structuredClone`.
-  TRIGGER when: code combines `config.set` calls in a boot sequence (base + env + overrides) from `@mongez/config`; user asks "how do I set up multi-environment config", "how do I do feature flags with @mongez/config", or "how do I make config reactive with @mongez/atom"; per-feature wrapper modules around `config.get`.
-  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; single-method reference — use `mongez-config-reading`/`mongez-config-writing`/`mongez-config-listing`; pure `@mongez/atom` reactivity without config seed — use `mongez-atom-*` skills.
 ---
 
 # Recipes
@@ -53,14 +51,18 @@ if (isEnabled("brandNew")) {
 
 The `Boolean(...)` wrapper coerces any truthy value (string, number) to a boolean — useful if your feature flags are sourced from env vars (`"true"` / `"1"` / `""`).
 
-## Default-with-explicit-undefined-trap
+## Defaults survive a cleared key
 
 ```ts
 const timeoutMs = config.get("api.timeout", 30000);
 fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
 ```
 
-Works even when `api.timeout` was never set; falls back to `30000`. Note that if you (or some other module) explicitly did `config.set("api.timeout", undefined)`, you'd still get the fallback.
+Works whether `api.timeout` was never set or was explicitly cleared with `config.set("api.timeout", undefined)` / `config.unset("api.timeout")` — both leave the key absent, so the fallback applies.
+
+The one case that does **not** fall back is an explicit `config.set("api.timeout", null)`: that stores a real `null`, and `get` returns it. If a `null` can reach a consumer that demands a number, either clear the key instead of nulling it, or guard with `??` at the call site.
+
+> Before 1.2.0 this was a genuine trap: `set(key, undefined)` stored `null`, so a cleared key silently returned `null` instead of your default — and the resulting failure surfaced far from the `set` that caused it.
 
 ## Env-driven config
 

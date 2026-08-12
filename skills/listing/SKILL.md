@@ -2,8 +2,6 @@
 name: mongez-config-listing
 description: |
   Reference for `config.list` — what it returns, the live-reference caveat, how to snapshot the tree safely with `structuredClone`, and patterns like debug dumps and wholesale tree replacement.
-  TRIGGER when: code calls `config.list` from `@mongez/config`; user asks "how do I get the full config tree", "how do I snapshot/clone the config", or "how do I dump the config for debugging"; import pattern `import config from "@mongez/config"` followed by `config.list()`.
-  SKIP: `@mongez/dotenv` handles `.env` parsing, not this package; reading single values — use `mongez-config-reading`; writing values — use `mongez-config-writing`; reactive subscriptions on the tree — use `mongez-atom-*` skills.
 ---
 
 # Listing — `config.list`
@@ -49,6 +47,8 @@ config.list();                               // {}
 ```
 
 The config tree starts as a plain empty object on every fresh module load.
+
+> **Don't remove keys by mutating this object.** `list()` returning the live tree is an implementation detail, not a contract. Use `config.unset(key)` (or `config.set(key, undefined)`) — added in 1.2.0 precisely so callers never have to reach in here.
 
 ## Patterns
 

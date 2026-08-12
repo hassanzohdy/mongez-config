@@ -125,11 +125,15 @@ describe("config.set — path form", () => {
     expect(config.get("name")).toBe("");
   });
 
-  it("config.set(path, undefined) coerces to null via the default parameter", () => {
-    // The signature is `set(key, value = null)`. JS default parameters
-    // substitute for `undefined`, so passing it explicitly stores `null`.
+  it("config.set(path, undefined) unsets the key", () => {
+    // Until 1.2.0 the signature was `set(key, value = null)`, and JS default
+    // parameters substitute for `undefined` — so passing it explicitly stored
+    // `null` and the stored `null` then beat every later
+    // `get(key, fallback)`. This test asserted that coercion as if it were
+    // intended; it was the reported defect. `undefined` now clears the key.
+    // See unset.test.ts for the full contract.
     config.set("maybe", undefined);
-    expect(config.get("maybe", "fallback")).toBeNull();
+    expect(config.get("maybe", "fallback")).toBe("fallback");
   });
 });
 
