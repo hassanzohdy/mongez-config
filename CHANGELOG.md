@@ -1,5 +1,15 @@
 # Changelog — @mongez/config
 
+## [1.2.1] — 2026-08-17
+
+### Security
+
+- **Object-form `config.set(object)` can no longer pollute `Object.prototype`** (`src/config.ts`, via `@mongez/reinforcements` `merge`). The single-argument form deep-merges the given object into the config tree, and the merge walked source keys without excluding `__proto__` / `constructor` / `prototype`. An object literal is safe (`{__proto__: …}` is prototype-setting syntax, not an own key), but `JSON.parse` produces a **real own-enumerable** `__proto__` key — so `config.set(JSON.parse(remoteConfigBody))` wrote through to `Object.prototype`. Config is routinely seeded from exactly such sources: a fetched settings document, a parsed env/JSON file, an API response merged in at boot. The guard lives in the reinforcements `merge` this package delegates to; **upgrading `@mongez/config` alone is not enough — `@mongez/reinforcements` must resolve to a version carrying the fix** (`^3.1.0` in this package's dependency range does, from the corresponding release).
+
+### Added
+
+- **Regression tests** (`src/__tests__/config.test.ts`) pinning the behaviour from this package's side rather than trusting the dependency: a `JSON.parse`'d `__proto__` key and nested `constructor` / `prototype` keys both leave `Object.prototype` untouched, while the legitimate keys in the same payload still merge.
+
 ## [1.2.0] — 2026-08-12
 
 Reported by @Ion (Warlock.js team) on 2026-08-11: `config.set(key, undefined)` stored `null` and silently destroyed the default-value contract of every later `get(key, fallback)`.

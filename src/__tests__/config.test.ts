@@ -276,6 +276,41 @@ describe("dot-notation edge cases", () => {
   });
 });
 
+describe("config.set — object form (prototype pollution guard)", () => {
+  // `JSON.parse` creates a real own-enumerable "__proto__" key (unlike an
+  // object literal, where "__proto__" is prototype-setting syntax). The
+  // object-form branch of `set()` forwards straight into
+  // `@mongez/reinforcements` `merge()`, whose `mergePlainObjects` skips
+  // `__proto__` / `constructor` / `prototype` keys — assert that guard
+  // actually holds from this package's entry point.
+  afterEach(() => {
+    delete (Object.prototype as any).polluted;
+  });
+
+  it("does not pollute Object.prototype via a JSON.parse'd __proto__ key", () => {
+    config.set(JSON.parse('{"__proto__":{"polluted":"x"}}'));
+
+    expect(({} as any).polluted).toBeUndefined();
+    expect((Object.prototype as any).polluted).toBeUndefined();
+  });
+
+  it("does not pollute Object.prototype via nested constructor/prototype keys", () => {
+    config.set(
+      JSON.parse('{"a":{"constructor":{"prototype":{"polluted":"x"}}}}'),
+    );
+
+    expect(({} as any).polluted).toBeUndefined();
+  });
+
+  it("normal set/get still works after a rejected pollution attempt", () => {
+    config.set(JSON.parse('{"__proto__":{"polluted":"x"}}'));
+    config.set({ api: { url: "https://example.com" } });
+
+    expect(config.get("api.url")).toBe("https://example.com");
+    expect(config.list()).toEqual({ api: { url: "https://example.com" } });
+  });
+});
+
 describe("set — invalid single-argument calls", () => {
   it("throws when called with a single non-object argument and leaves the tree intact", () => {
     // src/config.ts — single-arg `set` requires a plain object for
