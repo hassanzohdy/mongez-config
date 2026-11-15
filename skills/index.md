@@ -1,5 +1,5 @@
 ---
-description: "Process-wide, framework-agnostic configuration tree with dotted-path reads, deep-merge boot-time writes, targeted updates and removals, and default fallbacks that preserve false, 0, empty strings, and null. Use for: assembling application settings from base, environment, and deploy layers; reading nested settings anywhere; feature flags; and inspecting the current tree. 80% path: start with overview, seed layers with writing, read values and defaults with reading, then use recipes for common bootstrap patterns. Not this package → .env file loading, coercion, and interpolation: @mongez/dotenv; reactive state or SSR request isolation: @mongez/atom; reusable path and merge utilities: @mongez/reinforcements."
+description: "Process-wide, framework-agnostic configuration tree with dotted-path reads, deep-merge boot-time writes, targeted updates and removals, and defaults that preserve false, 0, empty strings, and null. Use for: assembling settings from base, environment, and deploy layers; reading nested settings anywhere; feature flags. Not this package → .env loading, coercion, interpolation: @mongez/dotenv; reactive state or SSR request isolation: @mongez/atom; path and merge utilities: @mongez/reinforcements."
 ---
 
 # @mongez/config
